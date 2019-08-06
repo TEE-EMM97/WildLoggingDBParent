@@ -243,7 +243,10 @@ We're going to add an authentication definition first, which mirrors the definit
            - "admin"
   ```
 
+
+
 ### Adding scopes to the authentication
+
 #### What are scopes?
 1. You'll notice a term in in the securityDefinition above; 'scopes'
 2. scopes are pretty big in OAuth; a scope can be seen as a capability or a priviledge which a client is granted when they access a system via its API.
@@ -254,7 +257,10 @@ We're going to add an authentication definition first, which mirrors the definit
 7. Some endpoints will require different scopes
 8. For example an endpoint might provide company data with one scope, and more sensitive data with another.
 
+
+
 ### Adding the 'admin' scope to the Auth0 API
+
 We're going to ensure that the `wildlogginadmin` authorization adds an 'admin' scope to its token.
 1. In your Auth0 account, click on the API again, to check out the detail:
 2. ![auth0_create_api_4](./documentation/resources/auth0_create_api_4.png)
@@ -293,6 +299,8 @@ There are a number of other items which are checked for in the request which are
 
 **We will modify the SwaggerUI, so we can automatically inject these items into the request.**
 
+
+
 #### A new Swagger UI client
 
 You will see from the `package.json` file, that the project has a dependency on `swagger-tools` and, if you take a look in `\node_modules\swagger-tools\middleware`, you'll see the swagger-ui. A closer look at the source code reveals that our swagger-generated server code currently runs version 2.1.4, which is fine.
@@ -328,6 +336,8 @@ We need to get our own version of the source, and modify that.
 
     ```
 
+     ```
+     
 11. **with**
 
 12. ```javascript
@@ -338,6 +348,8 @@ We need to get our own version of the source, and modify that.
    ```
 
 13. Test it, by re-running the server, and going to `http://localhost:8080/docs`. It will look different, and won't be displaying our interface any more. More mods needed!
+
+
 
 #### Swagger UI will read our set-up from a .js file
 
@@ -524,6 +536,8 @@ Now we have our one user signed-up, it's time to ensure that we don't over-exten
 3. You'll see a setting 'Disable sign-ups'. **make sure this is checked**
 4. Note: you can still create new users on the account, using the dashboard.
 
+
+
 ### Use our service to configure its Swagger UI from wherever it's deployed
 
 You'll have noticed that there is a lot to do when we set-up an authenticated service. We try and minimise the hassle wherever we can. One way is to store our essential client set-up values in environment varables on the server: when the server is started, we can read them, and put them in the `authproviderconfig.js` file for the SPWA to pick up. Here's how:
@@ -615,6 +629,7 @@ You'll have noticed that there is a lot to do when we set-up an authenticated se
     ```
 
 
+
 ### Modify the service to handle token-based authorisation
 
 You'll have noticed that this swagger-generated service relies alot on the swagger middleware components. These handle the routing of http requests to their handler code, via a mapping to their interface definition in the `swagger.yaml`.
@@ -630,6 +645,8 @@ In the `swagger.yaml`,  you'll see this in the `security` term of an endpoint de
 ```
 
 In this section we'll be providing the `urbanwild_admin_auth` handler, and plugging it in to the middle ware.
+
+
 
 #### Environment Variables
 
@@ -839,10 +856,11 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
     
     
     var hasAuthorisedScope = function (scopeString, authorisedScopes) {
-        var result = false;
+        var result = true;
         if (scopeString && scopeString.length > 0) {
+            result = false;
             var scopes = Object.keys(authorisedScopes);
-    
+     
             for (var index = 0; index < scopes.length; index++) {
                 var scope = scopes[index];
                 if (scopeString.indexOf(scope) != NOT_FOUND) {
@@ -853,7 +871,6 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
         }
         return result;
     }
-    
     
     
     
@@ -922,6 +939,8 @@ example: `https://urbanwild.eu.auth0.com//.well-known/jwks.json`
 
 Now you should be able to run on local host. Use the Swagger UI to attempt to access both authenticated and non-authenticated endpoints :-)
 
+
+
 ### Deploying
 
 There are a couple of things which we need to do before deploying, so our authentication system will work:
@@ -930,6 +949,8 @@ There are a couple of things which we need to do before deploying, so our authen
   * This means we can have multiple deployments from the same source code
 * Add the new environment variables to Heroku
 * Add the deployed callback page to Auth0
+
+
 
 #### API location variables
 
@@ -940,6 +961,8 @@ You'll recall that the SwaggerUI application will read the `swagger.yaml` in ord
 Having the location of the API set in the swagger.yaml ties the deployment to the information in the repository. We don't want this: it means you can only deploy it to location specified in the yaml. That means only one deployment per copy of the repo.
 
 Adding environment variables means we can override these settings when the code is deployed. That means the SwaggerUI can be set to point at the correct server, regardless of where it is deployed from.
+
+
 
 ##### Localhost by default
 
@@ -975,6 +998,7 @@ Here are the changes we made to the the `index.js` file in the server, to do it:
 
 ```javascript
 var secDefs = swaggerDoc.securityDefinitions;
+
 for (var secDef in secDefs) {
     console.log("changing: " + secDefs[secDef].authorizationUrl + " : to : " + authUri);
     secDefs[secDef].authorizationUrl = authUri;
@@ -1045,6 +1069,8 @@ var serverPort = swaggerUIConfig.existingPort || swaggerUIConfig.port;
 
 ... you'll notice we have to deal with a number of scenarios - especially since Heroku routes http traffic through port 443 into a totally different port whichthe NodeJS instance must listen for.
 
+
+
 ####  Adding the Environment Variables to Heroku
 
 This is pretty straight-forward. Just take the values which you put into your VSCode `launch.json` file:
@@ -1075,6 +1101,8 @@ You'll remember that the implicit flow needs to call-back to a web-page with the
 
 In your Auth0 account, you'll need to change the setting for
 
+
+
 **Applications > Settings > Allowed Callback URLs**
 
 Simply change the domain from localhost, to the one you deployed to. In our case, it's  `urbanwilddbapi.herokuapp.com`: 
@@ -1082,6 +1110,179 @@ Simply change the domain from localhost, to the one you deployed to. In our case
 
 
 ![swagger_spwa_4](./documentation/resources/auth0_create_app_8.png)
+
+
+
+### Adding Hooks
+
+When setting up the Auth0 account, there are two operations which have been omitted.
+The effect is that a crucial piece of functionality is not added, which makes Auth0 do the following:
+
+1. Allow scopes to be allocated to users, like '**admin**' or '**research**'
+2. Allows a client application to request this scopes on behalf of a user
+
+
+
+The server application verifies the **JWT** authorisation **TWICE**:
+
+Generally:
+
+1. Checks the JWT is valid.
+2. Contains essential scopes (admin)
+3. Checks the JWT contains a scope requires by a particular function**(Specific Endpoints)**
+
+
+
+#### Set Auth0 to Allow Scopes
+
+This is the first stage in the process of allowing other users to sign up to our service and allocating to users
+
+The Urban Wild hooks are where we are able to alter the behaviour of Auth0 with Node.js code that is executed in selected extension points. 
+
+When naviagating the hooks section you will be greeted with with 3 different types of hooks; Client Credentials Exchange, Post User Registration and Pre User Registration.
+
+In this instance we are after the **Pre User Registration** this is where you will find the button 'Create New Hook'
+
+![auth0_hooks banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_hooks banner.png)
+
+
+
+Following this you will be greeted with a auth0  modal (pop up) requesting for a name of your hook, we can name whatever we like but on this occasion we will name it something generic so it's not forgettable. Once you have named it just press create.
+
+![auth0_createHook_modal](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_createHook_modal.png)
+
+
+
+This will reveal a new change to the hooks page allowing access to the hook.
+
+
+
+![auth0_preRegistration_banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_preRegistration_banner.png)
+
+Click the **pencil icon** to take you over to the text editor for our created hook.
+
+![auth0_editHook_page](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_editHook_page.png)
+
+Assign the following code to the Pre User Registration Hook. The following code adds default scopes to the user's **app_metadata**; now it is possible to have a user within restricted scopes such as **consumer and member**.
+
+
+
+> **The following code must be added to Auth0**
+
+```javascript
+/**
+@param {object} user - The user being created
+@param {string} user.tenant - Auth0 tenant name
+@param {string} user.username - user name
+@param {string} user.password - user's password
+@param {string} user.email - email
+@param {boolean} user.emailVerified - is e-mail verified?
+@param {string} user.phoneNumber - phone number
+@param {boolean} user.phoneNumberVerified - is phone number verified?
+@param {object} context - Auth0 connection and other context info
+@param {string} context.requestLanguage - language of the client agent
+@param {object} context.connection - information about the Auth0 connection
+@param {object} context.connection.id - connection id
+@param {object} context.connection.name - connection name
+@param {object} context.connection.tenant - connection tenant
+@param {object} context.webtask - webtask context
+@param {function} cb - function (error, response)
+*/
+
+module.exports = function (user, context, cb) {
+    var response = {};
+  
+    // Add user or app metadata to the newly created user
+    // response.user = {
+    //   user_metadata: { foo: 'bar' },
+    //   app_metadata: { vip: true, score: 7 }
+    // };
+  
+    var app_metadata = user.app_metadata || {};
+    
+    app_metadata.allocated_scopes = [];
+  
+    user.app_metadata = app_metadata;
+  
+    response.user = user;
+  
+    cb(null, response);
+  
+  };
+  
+```
+
+
+
+### **Adding Rules**
+
+OAuth looks up the incoming scopes for the user attempting to login. If the user has the **scope** associated, it is added to the 'scope' property of the outgoing **JWT**.
+
+At the moment, we assume that everybody who has an account will be granted the rights of '**consumer**' and '**member**'
+
+However, what we must do now is to ensure that a claim for researcher or admin is granted only when the user has researcher or admin rights.
+
+Here is a rule which is run on authentication, and gives out only the scopes which are requested, and only if they belong to the user. Defaults of consumer and member are added if they are missing.
+
+##### **Applying rules on Auth0**
+
+
+
+![auth0_rules banner](/Users/tm97/Documents/GitHub/WildLoggingDBParent/documentation/resources/auth0_rules banner.png)
+
+
+
+```javascript
+
+function (user, context, callback) {
+  var _ = require("lodash");
+  
+  var req = context.request;
+
+  // Get requested scopes
+  var scopes = (req.query && req.query.scope) || (req.body && req.body.scope);
+    
+  // Normalize scopes into an array
+  scopes = (scopes && scopes.split(" ")) || [];
+
+  // Restrict the access token scopes according to the current user
+  context.accessToken.scope = restrictScopes(user, scopes);
+  
+  callback(null, user, context);
+  
+  function restrictScopes(user, requested_scopes) {
+    // Full list of scopes available hardcoded for demo purposes
+    
+    var metadata = user.app_metadata;
+    var allocated_scopes   = metadata.allocated_scopes;
+    
+    // Intersect allocated_scopes with requested_scopes to allow the client
+    // application to request less scopes than all the ones the
+    // user has actually access to. For example, the client
+    // application may only want read access even though the
+    // user has write access
+   
+    scopes = _.intersection(allocated_scopes, requested_scopes);
+    
+    // if the client has requested scopes which are not authorised
+    // it is possible for the scope to be returned as ""
+    // if this happens, the requested scope is returned, meaning that
+    // the client's request is authorised by default. BAD!
+    // The only thing to do is to return something which banjacks the
+    // whole thing.
+    
+    var result = []; // this will cause the scope to be removed. 
+    
+    if (scopes.length > 0){
+      result = scopes.join(" ");
+    }
+        
+    return result;
+  }
+}
+```
+
+
 
 
 
